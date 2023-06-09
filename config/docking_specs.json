@@ -1,0 +1,8 @@
+{
+  "naming1": "MPro_docking",
+  "naming2": "10step",
+  "file_path_pdbqt": "./outputs_05_12/",
+  "vina": "/Users/kamen/Documents/autodock_vina_1_1_2_mac_catalina_64bit/bin/vina",
+  "protein_pdbqt": "../receptor/1oq5_without_celecoxib.pdbqt",
+  "for_SuCOS": "../ligands_for_SuCOS/celecoxib_for_sucos_etkdg.sdf"
+}

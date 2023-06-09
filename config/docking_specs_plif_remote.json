@@ -1,0 +1,8 @@
+{
+  "naming1": "MPro_docking",
+  "naming2": "10step",
+  "file_path_pdbqt": "./outputs_24_11_plif/",
+  "vina" : "/apps/system/easybuild/software/AutoDock_Vina/1.1.2_linux_x86/bin/vina",
+  "protein_pdbqt" : "../receptor/1oq5_without_celecoxib.pdbqt",
+  "for_SuCOS": "../ligands_for_SuCOS/celecoxib_docked_for_sucos.sdf"
+}
