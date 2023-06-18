@@ -18,6 +18,6 @@ conda env create -f environment.yml
 
 ## Execution
 
-Execute the following:
+Execute the following in order to experiment with darunavir as the starting molecule:
 
 python docking_env_penalty.py  --docking="./config/docking_specs.json"  --cache="False" --smarts_mask="S(=O)(=O)"  --model_dir="./outputs_24_01_dep/save"  --hparams="./config/multi_obj_dqn_rxn3Ddqn_remote.json" --start_molecule="CC1(C)[C@@H]2[C@@H](C(=O)S)NC[C@@H]21"  --target_molecule="CC1(C)[C@@H]2[C@@H](C(=O)S)NC[C@@H]21"
