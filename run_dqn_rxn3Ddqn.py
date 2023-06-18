@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# """
-# Created on Thu Oct 17 16:14:53 2019
-
-# @author: goto
-# """
-
 # coding=utf-8
 # Copyright 2019 The Google Research Authors.
 #
@@ -31,16 +23,13 @@ import functools
 import json
 import os
 import time
-import sys  # added for docking
 import subprocess  # added for docking
 
 from absl import app
 from absl import flags
 from absl import logging
 import pandas as pd
-# from baselines.common import schedules
 from stable_baselines.common import schedules
-# from baselines.deepq import replay_buffer
 from stable_baselines.common import buffers  # replay_buffer
 
 import numpy as np
@@ -53,36 +42,10 @@ from rdkit.Chem import Descriptors
 import tensorflow as tf
 from tensorflow import gfile
 
-# from mol_dqn.chemgraph.dqn import deep_q_networks
-# from mol_dqn.chemgraph.dqn import molecules as molecules_mdp
-# from mol_dqn.chemgraph.dqn.py import molecules
-# from mol_dqn.chemgraph.dqn.tensorflow_core import core
 import deep_q_networks_rxn3Ddqn as deep_q_networks
-# import deep_q_networks
-# import molecules1 as molecules
 import core
 
-# add more below or create a dictionary so that the users could control what kind of reactions they want to perform, etc.
-#flags.DEFINE_string('fpath', None, 'Filename for starting drug molecule.')
-#flags.DEFINE_string('fpath1', None, 'Filename for reagents for acyl halide.')
-#flags.DEFINE_string('fpath2', None, 'Filename for reagents for amine.')
-#flags.DEFINE_string('fpath3', None, 'Name of model for docking intermediates.')
-#flags.DEFINE_string('fpath4', None, 'Name of the starting material for docking intermediates.')
-#flags.DEFINE_string('fpath5', None, 'Directory to place the docking intermediates.')
-#flags.DEFINE_string('fpath6', None, 'Path to AutoDock Vina.')
-#flags.DEFINE_string('fpath7', None, 'Path to pdbqt file for receptor.')
-#flags.DEFINE_float('fpath8', None, 'Value of center_x for AutoDock Vina.')
-#flags.DEFINE_float('fpath9', None, 'Value of center_y for AutoDock Vina.')
-#flags.DEFINE_float('fpath10', None, 'Value of center_z for AutoDock Vina.')
-#flags.DEFINE_string('fpath11', None, 'Value of size_x for AutoDock Vina.')
-#flags.DEFINE_string('fpath12', None, 'Value of size_y for AutoDock Vina.')
-#flags.DEFINE_string('fpath13', None, 'Value of size_z for AutoDock Vina.')
-#flags.DEFINE_string('fpath14', None, 'Value of exhaustiveness for AutoDock Vina.')
-#flags.DEFINE_string('cache', None, 'Specify whether cache is True or False.')
-#flags.DEFINE_string('SMARTS', None, 'SMARTS expression for fragment masking.')
 flags.DEFINE_string('model_dir',
-                    # '/namespace/gas/primary/zzp/dqn/r=3/exp2_bs_dqn',
-                    # '/data/hoodedcrow/goto/MolDQN',
                     None,
                     'The directory to save data to.')
 flags.DEFINE_string('target_molecule', 'C1CCC2CCCCC2C1',
@@ -189,39 +152,25 @@ def run_docking(self, episode, hparams, molecule, steps_left, similarity_score):
     fpath10_stripped = 15.256
     ligand_for_sucos = docking["for_SuCOS"]
 
-    ##ligand_file_name = "ligand_%s_%04d_%s_%s.pdbqt" % (episode, self.num_steps_taken, fpath3, fpath4)
     if steps_left == 1:
         ligand_file_name = "episode_outs/ligand_%s_%04d_%s_%s.pdbqt" % (episode, self.num_steps_taken, fpath3, fpath4)
     else:
         ligand_file_name = "ligand_%s_%s_%04d_%s_%s.pdbqt" % (episode, hparams.num_episodes, self.num_steps_taken, fpath3, fpath4)
-        # ligand_file_name = "ligand_%s_%04d_%s_%s.pdbqt" % (episode, self.num_steps_taken, fpath3, fpath4)
     ligand_file_path = fpath5 + ligand_file_name
     sascore = sascorer.calculateScore(molecule)
-    #sdf_writer = Chem.SDWriter(ligand_file_path[:-6] + '.sdf')
     try:
         molecule = AllChem.AddHs(molecule)
         ps = rdDistGeom.ETKDG()
         res = rdDistGeom.EmbedMolecule(molecule, ps)
 
-        #sdf_writer.write(molecule)
-        #sdf_writer.close()
-
-        #pymol_cmd.load(ligand_file_path[:-6] + '.sdf', object='celecoxib')
-        #pymol_cmd.save(ligand_file_path[:-2], 'celecoxib')
-        #pymol_cmd.reinitialize()
-        #AllChem.EmbedMolecule(molecule)
         if res != -1:
             Chem.MolToPDBFile(molecule, ligand_file_path[:-2])
-        #ligand_pdb = molecules.Mol_into_PDB_ligand(molecule)
-        #with open(ligand_file_path[:-2], 'w') as f:
-        #    f.write(ligand_pdb + os.linesep)
 
             _ = subprocess.getoutput(
                 "python %s -l %s -o %s -R %r " % (
                     '/Users/kamen/Dev/AutoDockTools_py3/prep_ligand4.py', ligand_file_path[:-2], ligand_file_path, 0))  # just taking the first atom as the root because it shouldn't matter
             print('output from prep_ligand4 is ', _)
     except:
-        #sdf_writer.close()
         print('failed to prepare molecule ', Chem.MolToSmiles(molecule), ' with synthetic accessibility ', sascore, ' episode ', episode, steps_left)
 
     try:
@@ -248,7 +197,7 @@ def run_docking(self, episode, hparams, molecule, steps_left, similarity_score):
                     zs.append(float(line_li[7]))
         f.close()
 
-        ligand = pd.DataFrame(data={'x':xs, 'y':ys, 'z':zs})  # probably can skip the creation of a df object
+        ligand = pd.DataFrame(data={'x':xs, 'y':ys, 'z':zs})
         penalty = 0.
         for i in range(len(ligand)):
             crd = np.array(ligand.iloc[i])
@@ -264,8 +213,7 @@ def run_docking(self, episode, hparams, molecule, steps_left, similarity_score):
         _ = subprocess.getoutput(
             "%s %s -O %s" % ('obabel', ligand_file_path[:-6] + '_out.pdbqt', ligand_file_path[:-6] + '_out.sdf'))
 
-        #sucos_score = ''
-        #try:
+
         sucos_score = subprocess.getoutput(
             "%s %s --lig1 %s --lig2 %s | grep 'SuCOS score:' | awk '{print $3}' | head -1" % (
             'python', '../utils/calc_SuCOS_normalized.py', ligand_for_sucos,
@@ -293,11 +241,10 @@ def run_docking(self, episode, hparams, molecule, steps_left, similarity_score):
             "halogen",
             "metal",
         )
+        # set of interactions to keep
         hydrophobic_interacting_resis_flexres = [67, 121, 131, 198, 198]
         hbond_interacting_resis_flexres = [199, 94]
         pistacking_interacting_resis_flexres = {131}
-        #site = 'UNL:Z:1'  # because of the Zn there are two sites
-        # but this is the correct name every time anyway
 
         interactions_penalty = 0
         total_number_of_interactions = 0
@@ -346,28 +293,18 @@ def run_docking(self, episode, hparams, molecule, steps_left, similarity_score):
                         pistacking_interacting_resis_ligand ^ pistacking_interacting_resis_flexres)
                 else:
                     interactions_penalty -= 2
-                    # interactions_penalty -= abs(len(interactions_by_site[site][key]) - 2)
             else:
-                # the number of all other interactions in nirmatrelvir-binding site is 0
+                # the number of all other interactions in celecoxib-binding site is 0
                 interactions_penalty -= abs(len(interactions_by_site[site][key]) - 1)
 
-        #subprocess.getoutput("rm " + ligand_file_path)
         f_docking_score = (-1.0) * float(docking_output)
     except:
-        print('IT IS THROWING SOME EXCEPTION for molecule with sascore ',sascore, ' smiles ', Chem.MolToSmiles(molecule), ' episode ', episode, steps_left)
+        # give default minima when the molecule failed to dock
         total_number_of_interactions = 1
         f_docking_score = 0.0
         sucos_score = 0.
         interactions_penalty = -25.
-        penalty = -50.  # basically means the molecule is regarded as good
-        # so it will be put to the buffer with priority, hence will be replayed and hopefully
-        # the second docking will be successful
-        #else:
-        #print('The SAScore was ', sascore, ' so the molecule was not docked in ', episode, steps_left, Chem.MolToSmiles(molecule))
-        #f_docking_score = 0.0
-        #sucos_score = 0.
-        #interactions_penalty = -25.
-        #penalty = -50.
+        penalty = -50.
 
     qed = QED.qed(molecule)
     logp = molecules.penalized_logp(molecule)
@@ -504,116 +441,6 @@ class MultiObjectiveRewardMolecule(molecules_mdp.Molecule):
             return similarity_score, docking_score
 
 
-'''
-class MultiObjectiveRewardMolecule(molecules_mdp.Molecule):
-  """Defines the subclass of generating a molecule with a specific reward.
-  The reward is defined as a 1-D vector with 2 entries: similarity and QED
-    reward = (similarity_score, qed_score)
-  """
-
-  def __init__(self, target_molecule, **kwargs): #same for new action space
-    """Initializes the class.
-    Args:
-      target_molecule: SMILES string. the target molecule against which we
-        calculate the similarity.
-      **kwargs: The keyword arguments passed to the parent class.
-    """
-    super(MultiObjectiveRewardMolecule, self).__init__(**kwargs)
-    target_molecule = Chem.MolFromSmiles(target_molecule)
-    self._target_mol_fingerprint = self.get_fingerprint(target_molecule)
-    self._target_mol_scaffold = molecules.get_scaffold(target_molecule)
-    self.reward_dim = 2
-
-  def get_fingerprint(self, molecule): #same for new action space
-    """Gets the morgan fingerprint of the target molecule.
-    Args:
-      molecule: Chem.Mol. The current molecule.
-    Returns:
-      rdkit.ExplicitBitVect. The fingerprint of the target.
-    """
-    return AllChem.GetMorganFingerprint(molecule, radius=2)
-
-  def get_similarity(self, smiles):
-    """Gets the similarity between the current molecule and the target molecule.
-    Args:
-      smiles: String. The SMILES string for the current molecule.
-    Returns:
-      Float. The Tanimoto similarity.
-    """
-
-    structure = Chem.MolFromSmiles(smiles)
-    if structure is None:
-      return 0.0
-    fingerprint_structure = self.get_fingerprint(structure)
-
-    return DataStructs.TanimotoSimilarity(self._target_mol_fingerprint,
-                                          fingerprint_structure)
-
-
-  def _reward(self):
-    """Calculates the reward of the current state.
-    The reward is defined as a tuple of the similarity and QED value.
-    Returns:
-      A tuple of the similarity and qed value
-    """
-    # calculate similarity.
-    # if the current molecule does not contain the scaffold of the target,
-    # similarity is zero.
-    if self._state is None:
-      return 0.0, 0.0
-    mol = Chem.MolFromSmiles(self._state)
-    if mol is None:
-      return 0.0, 0.0
-    if molecules.contains_scaffold(mol, self._target_mol_scaffold):
-      similarity_score = self.get_similarity(self._state)
-    else:
-      similarity_score = 0.0
-    # calculate QED
-    qed_value = QED.qed(mol)
-    return similarity_score, qed_value
-'''
-'''
-  def get_similarity(self, smiles):
-    """Gets the similarity between the current molecule and the target molecule.
-    Args:
-      smiles: String. The SMILES string for the current molecule.
-    Returns:
-      Float. The Tanimoto similarity.
-    """
-
-    structure = Chem.MolFromSmiles(smiles)
-    if structure is None:
-      return 0.0
-    fingerprint_structure = self.get_fingerprint(structure)
-
-    return DataStructs.TanimotoSimilarity(self._target_mol_fingerprint,
-                                          fingerprint_structure)
-'''
-'''
-  def _reward(self):
-    """Calculates the reward of the current state.
-    The reward is defined as a tuple of the similarity and QED value.
-    Returns:
-      A tuple of the similarity and qed value
-    """
-    # calculate similarity.
-    # if the current molecule does not contain the scaffold of the target,
-    # similarity is zero.
-    if self._state is None:
-      return 0.0, 0.0
-    mol = Chem.MolFromSmiles(self._state)
-    if mol is None:
-      return 0.0, 0.0
-    if molecules.contains_scaffold(mol, self._target_mol_scaffold):
-      similarity_score = self.get_similarity(self._state)
-    else:
-      similarity_score = 0.0
-    # calculate QED
-    qed_value = QED.qed(mol)
-    return similarity_score, qed_value
-'''
-
-
 # TODO(zzp): use the tf.estimator interface.
 def run_training(hparams, environment, dqn, td_errors, rewards):  # same for new action space
     """Runs the training procedure.
@@ -673,40 +500,12 @@ def run_training(hparams, environment, dqn, td_errors, rewards):  # same for new
                     os.path.join(FLAGS.model_dir, 'ckpt'),
                     global_step=global_step)
 
-'''KP 2022
-def run_eval(environment, hparams, dqn, checkpoint): # KP 2022, not used for now
-    tf.compat.v1.reset_default_graph()
-    with tf.Session() as sess:
-        dqn.build()
-        sess.run(tf.global_variables_initializer())
-        sess.run(dqn.update_op)
-        # print('before import ', tf.trainable_variables())
-        saver = tf.compat.v1.train.import_meta_graph(checkpoint)
-        saver.restore(sess=sess, save_path=tf.train.latest_checkpoint('./outputs/save'))
-
-        for episode in range(hparams.num_episodes):
-            global_step, episode_td_errors, episode_rewards = _episode_eval(
-                environment=environment,
-                dqn=dqn,
-                memory=memory,
-                episode=episode,
-                global_step=global_step,
-                hparams=hparams,
-                summary_writer=summary_writer,
-                exploration=exploration,
-                beta_schedule=beta_schedule,
-            )'''
-
 
 def _episode_eval(environment, dqn, memory, episode, global_step, hparams,
                   summary_writer, exploration, beta_schedule):   # KP 2022
     episode_start_time = time.time()
     environment.initialize()
-    '''
-    if hparams.num_bootstrap_heads:
-        head = np.random.randint(hparams.num_bootstrap_heads)
-    else:
-        head = 0'''
+
     head = 0
     for step in range(hparams.max_steps_per_episode):
         result = _step(
@@ -850,7 +649,7 @@ def _step(environment, dqn, memory, episode, hparams, exploration, head):  # sam
         action=0,
         reward=result.reward,
         obs_tp1=action_fingerprints,
-        done=float(result.terminated))  # KP the action is assigned to 0 as it is not used later
+        done=float(result.terminated))
     return result
 
 
@@ -922,77 +721,6 @@ def run_dqn(multi_objective=False):
     )
 
     core.write_hparams(hparams, os.path.join(FLAGS.model_dir, 'config_rxn3Ddqn.json'))
-
-
-'''
-def run_dqn(multi_objective=False):
-  """Run the training of Deep Q Network algorithm.
-  Args:
-    multi_objective: Boolean. Whether to run the multiobjective DQN.
-  """
-  if FLAGS.hparams is not None:
-    with gfile.Open(FLAGS.hparams, 'r') as f:
-      hparams = deep_q_networks.get_hparams(**json.load(f))
-  else:
-    hparams = deep_q_networks.get_hparams()
-  logging.info(
-      'HParams:\n%s', '\n'.join([
-          '\t%s: %s' % (key, value)
-          for key, value in sorted(hparams.values().items())
-      ]))
-
-  # TODO(zzp): merge single objective DQN to multi objective DQN.
-  if multi_objective:
-    environment = MultiObjectiveRewardMolecule(
-        target_molecule=FLAGS.target_molecule,
-        atom_types=set(hparams.atom_types),
-        init_mol=FLAGS.start_molecule,
-        allow_removal=hparams.allow_removal,
-        allow_no_modification=hparams.allow_no_modification,
-        allow_bonds_between_rings=False,
-        allowed_ring_sizes={3, 4, 5, 6},
-        max_steps=hparams.max_steps_per_episode)
-
-    dqn = deep_q_networks.MultiObjectiveDeepQNetwork(
-        objective_weight=np.array([[FLAGS.similarity_weight],
-                                   [1 - FLAGS.similarity_weight]]),
-        input_shape=(hparams.batch_size, hparams.fingerprint_length + 1),
-        q_fn=functools.partial(
-            deep_q_networks.multi_layer_model, hparams=hparams),
-        optimizer=hparams.optimizer,
-        grad_clipping=hparams.grad_clipping,
-        num_bootstrap_heads=hparams.num_bootstrap_heads,
-        gamma=hparams.gamma,
-        epsilon=1.0)
-  else:
-    environment = TargetWeightMolecule(
-        target_weight=FLAGS.target_weight,
-        atom_types=set(hparams.atom_types),
-        init_mol=FLAGS.start_molecule,
-        allow_removal=hparams.allow_removal,
-        allow_no_modification=hparams.allow_no_modification,
-        allow_bonds_between_rings=hparams.allow_bonds_between_rings,
-        allowed_ring_sizes=set(hparams.allowed_ring_sizes),
-        max_steps=hparams.max_steps_per_episode)
-
-    dqn = deep_q_networks.DeepQNetwork(
-        input_shape=(hparams.batch_size, hparams.fingerprint_length + 1),
-        q_fn=functools.partial(
-            deep_q_networks.multi_layer_model, hparams=hparams),
-        optimizer=hparams.optimizer,
-        grad_clipping=hparams.grad_clipping,
-        num_bootstrap_heads=hparams.num_bootstrap_heads,
-        gamma=hparams.gamma,
-        epsilon=1.0)
-
-  run_training(
-      hparams=hparams,
-      environment=environment,
-      dqn=dqn,
-  )
-
-  core.write_hparams(hparams, os.path.join(FLAGS.model_dir, 'config.json'))
-'''
 
 
 def main(argv):

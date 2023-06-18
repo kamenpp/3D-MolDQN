@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# """
-# Created on Thu Oct 17 16:09:03 2019
-
-# @author: goto
-# """
-
 # coding=utf-8
 # Copyright 2019 The Google Research Authors.
 #
@@ -28,127 +20,13 @@ from __future__ import division
 from __future__ import print_function
 
 from rdkit import Chem
-from rdkit.Chem import Descriptors, AllChem
-from rdkit.Chem.Crippen import MolLogP  # KP 2022 added import
+from rdkit.Chem.Crippen import MolLogP
 from rdkit.Chem.Scaffolds import MurckoScaffold
-from molvs import Standardizer, charge
-# from rdkit.Contrib.SA_Score import sascorer
-import pandas as pd
-import numpy
 import sys
 from openbabel import openbabel  # added for docking
 from openbabel import pybel  # added for docking
-import os  # added for docking
-import subprocess  # added for docking
 
 import SA_Score.sascorer as sascorer
-
-
-# the first two definitions are not working
-# define more methods once needing more reagents to perform other reactions in the action space
-
-def initial_state():
-    fpath = "/data/hoodedcrow/goto/MolDQN/test_10compounds_all.smi"
-    with open(fpath, 'r') as f:
-        smiles_amide_reaction_starting_material1 = f.readline()
-    return smiles_amide_reaction_starting_material1
-
-
-def amide_reaction_starting_material():
-    fpath = "/data/hoodedcrow/goto/MolDQN/test_3compounds_all.smi"
-    with open(fpath, 'r') as f:
-        smiles_amide_reaction_starting_material = f.readlines()
-    return smiles_amide_reaction_starting_material
-
-
-def amide_reaction_reagent_amine():
-    fpath2 = sys.argv[3]
-    # fpath2 = "/data/hoodedcrow/goto/MolDQN/intersection.smi"
-    # fpath2 = "/data/hoodedcrow/goto/MolDQN/test_fragmentB_all_mini.smi"
-    with open(fpath2, 'r') as f:
-        smiles_amide_reaction_reagent_amine = f.readlines()
-    return smiles_amide_reaction_reagent_amine
-
-
-def amide_reaction_reagent_acyl_halide():
-    fpath1 = sys.argv[2]
-    # fpath1 = "/data/hoodedcrow/goto/MolDQN/intersection1.smi"
-    # fpath1 = "/data/hoodedcrow/goto/MolDQN/test_fragmentA_all_mini.smi"
-    with open(fpath1, 'r') as f:
-        smiles_amide_reaction_reagent_acyl_halide = f.readlines()
-    return smiles_amide_reaction_reagent_acyl_halide
-
-
-'''
-def SMILES_drugbank():
-    data1 = pd.read_csv('/data/hoodedcrow/goto/MolDQN/drug_bank_approved.csv')
-    b = data1['SMILES'].values
-    approved_drug_smiles_list = b.tolist()
-    approved_drug_smiles = {*approved_drug_smiles_list}
-    return approved_drug_smiles
-
-def search_amide_from_drugbank():
-    ss = Chem.MolFromSmarts("[NX3][CX3](=[OX1])[#6]")
-    approved_drug_with_amide_bond = set()
-    for drug in SMILES_drugbank():
-        molecule = Chem.MolFromSmiles(drug)
-        if molecule.HasSubstructMatch(ss):
-            approved_drug_with_amide_bond.add(drug)
-        else:
-            continue
-    return approved_drug_with_amide_bond
-
-def reactant_1_smiles_restricted_yield():
-    data = pd.read_csv('data/hoodedcrow/goto/MolDQN/restricted_yield.csv)
-    a = data['Reactant_1_SMILES'].values
-    reactant_amine_smiles_list = a.tolist()
-    reactant_amine_smiles = {*reactant_amine_smiles_list}
-    return reactant_amine_smiles
-    
-def reactant_2_smiles_restricted_yield():
-    data = pd.read_csv('data/hoodedcrow/goto/MolDQN/restricted_yield.csv)
-    c = data['Reactant_2_SMILES'].values
-    reactant_acyl_halide_smiles_list = c.tolist()
-    reactant_acyl_halide_smiles = {*reactant_acyl_halide_smiles_list}
-    return reactant_acyl_halide_smiles
- 
-def amide_reaction_starting_material():
-    fpath = "/Users/angoto/Downloads/MolDQN_Smiles/test_10compounds/test_10compounds_all.smi"
-    with open(fpath, 'r') as f:
-        smiles_amide_reaction_starting_material = f.readlines( )
-    return smiles_amide_reaction_starting_material
-
-def amide_reaction_reagent_amine():
-    fpath2 = "/Users/angoto/Downloads/MolDQN_Smiles/test_fragmentB/test_fragmentB_all.smi"
-    with open(fpath2, 'r') as f:
-        smiles_amide_reaction_reagent_amine = f.readlines( )
-    return smiles_amide_reaction_reagent_amine
-
-def amide_reaction_reagent_acyl_halide():
-    fpath1 = "/Users/angoto/Downloads/MolDQN_Smiles/test_fragmentA/test_fragmentA_all.smi"
-    with open(fpath1, 'r') as f:
-        smiles_amide_reaction_reagent_acyl_halide = f.readlines( )
-    return smiles_amide_reaction_reagent_acyl_halide
-'''
-'''
-def amide_reaction_starting_material():
-  fpath = "/Users/angoto/Downloads/MolDQN_Smiles/test_10compounds/test_10compounds_all.smi"
-  with open(fpath, 'r') as f:
-      smiles_amide_reaction_starting_material = f.readlines( )
-  return smiles_amide_reaction_starting_material
-
-def amide_reaction_reagent_amine():
-  fpath2 = "/Users/angoto/Downloads/MolDQN_Smiles/test_fragmentB/test_fragmentB_all.smi"
-  with open(fpath2, 'r') as f:
-      smiles_amide_reaction_reagent_amine = f.readlines( )
-  return smiles_amide_reaction_reagent_amine
-
-def amide_reaction_reagent_acyl_halide():
-  fpath1 = "/Users/angoto/Downloads/MolDQN_Smiles/test_fragmentA/test_fragmentA_all.smi"
-  with open(fpath1, 'r') as f:
-      smiles_amide_reaction_reagent_acyl_halide = f.readlines( )
-  return smiles_amide_reaction_reagent_acyl_halide
-'''
 
 
 def atom_valences(atom_types):
@@ -230,8 +108,7 @@ def penalized_logp(molecule):
   Returns:
     Float. The penalized logP value.
   """
-    #log_p = Descriptors.MolLogP(molecule)
-    log_p = MolLogP(molecule) # KP 2022 MolLogP migrated to somewhere else not Descriptors any more
+    log_p = MolLogP(molecule)
     sas_score = sascorer.calculateScore(molecule)
     largest_ring_size = get_largest_ring_size(molecule)
     cycle_score = max(largest_ring_size - 6, 0)
@@ -264,8 +141,6 @@ def SMILES_into_PDBQT_ligand(molecule):
     """
     mol_H_string = pybel.readstring("smi", SMILES_add_hydrogens(molecule))
     mol_H_string.make3D()
-    #pcs = mol_H_string.calccharges(model="qtpie")
-    #print('the partial charges that should have been assigned are ', pcs)
     mol_H_PDBQT = mol_H_string.write("pdbqt")
     return mol_H_PDBQT
 

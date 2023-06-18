@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# """
-# Created on Thu Oct 17 16:29:32 2019
-
-# @author: goto
-# """
-
 # coding=utf-8
 # Copyright 2019 The Google Research Authors.
 #
@@ -61,7 +53,6 @@ class DeepQNetwork(object):
                  num_bootstrap_heads=10,
                  scope='dqn',
                  reuse=None):
-        # same for new action space
         """Creates the model function.
     Args:
       input_shape: Tuple. The shape of input.
@@ -94,7 +85,7 @@ class DeepQNetwork(object):
         self.reuse = reuse
         self.epsilon = epsilon
 
-    def build(self):  # same for new action space
+    def build(self):
         """Builds the computational graph and training operations."""
         self._build_graph()
         self._build_training_ops()
@@ -364,7 +355,7 @@ class DeepQNetwork(object):
                    observations,
                    stochastic=True,
                    head=0,
-                   update_epsilon=None):  # same for new action space
+                   update_epsilon=None):
         """Function that chooses an action given the observations.
     Args:
       observations: np.array. shape = [num_actions, fingerprint_length].
@@ -572,12 +563,6 @@ class MultiObjectiveDeepQNetwork(DeepQNetwork):
             np.array([reward]).dot(self.objective_weight))
         return tf.get_default_session().run(
             self.episode_summary, feed_dict=feed_dict)
-        ''' KP this code is unreachable 
-        summary_string = sess.run(summary)  # parts added to read protobuf file 
-        summary_proto = tf.Summary().FromString(summary_string)
-        for entry in summary_proto.value:
-            print(entry.tag)
-            '''
 
     def _run_action_op(self, observations, head):  # same for new action space
         """Function that runs the op calculating an action given the observations.
@@ -699,86 +684,6 @@ def get_hparams(**kwargs):
     return hparams.override_from_dict(kwargs)
 
 
-'''
-def get_hparams(**kwargs):
-  """Get the hyperparameters for the model from a json object.
-  Args:
-    **kwargs: Dict of parameter overrides.
-  Possible keyword arguments:
-    atom_types: Dict. The possible atom types in the molecule.
-    max_steps_per_episode: Integer. The maximum number of steps for one episode.
-    allow_removal: Boolean. Whether to allow removal of a bond.
-    allow_no_modification: Boolean. If true, the valid action set will include
-      doing nothing to the current molecule, i.e., the current molecule itself
-      will be added to the action set.
-    replay_buffer_size: Integer. The size of the replay buffer.
-    learning_rate: Float. Learning rate.
-    learning_rate_decay_steps: Integer. The number of steps between each
-      learning rate decay.
-    learning_rate_decay_rate: Float. The rate of learning rate decay.
-    num_episodes: Integer. Number of episodes to run.
-    batch_size: Integer. The batch size.
-    learning_frequency: Integer. The number of steps between each training
-      operation.
-    update_frequency: Integer. The number of steps between each update of the
-      target Q network
-    grad_clipping: Integer. maximum value of the gradient norm.
-    gamma: Float. The discount factor for the reward.
-    double_q: Boolean. Whether to used double Q learning.
-      See https://arxiv.org/abs/1509.06461 for detail.
-    bootstrap: Integer. The number of bootstrap heads. See
-      https://arxiv.org/abs/1703.07608 for detail.
-    prioritized: Boolean. Whether to use prioritized replay. See
-      https://arxiv.org/abs/1511.05952 for detail.
-    prioritized_alpha: Float. The parameter alpha in the prioritized replay.
-    prioritized_beta: Float. The parameter beta in the prioritized replay.
-    prioritized_epsilon: Float. The parameter epsilon in the prioritized replay.
-    fingerprint_radius: Integer. The radius of the Morgan fingerprint.
-    fingerprint_length: Integer. The length of the Morgan fingerprint.
-    dense_layers: List of integers. The hidden units in the dense layers.
-    activation: String. The activation function to use.
-    optimizer: String. The optimizer to use.
-    batch_norm: Boolean. Whether to use batch normalization.
-    save_frequency: Integer. The number of episodes between each saving.
-  Returns:
-    A HParams object containing all the hyperparameters.
-  """
-  hparams = tf.contrib.training.HParams(
-      atom_types=['C', 'O', 'N'],
-      max_steps_per_episode=5,
-      allow_removal=True,
-      allow_no_modification=True,
-      allow_bonds_between_rings=False,
-      allowed_ring_sizes=[3, 4, 5, 6],
-      replay_buffer_size=1000000,
-      learning_rate=1e-4,
-      learning_rate_decay_steps=10000,
-      learning_rate_decay_rate=0.8,
-      num_episodes=300,
-      batch_size=64,
-      learning_frequency=4,
-      update_frequency=20,
-      grad_clipping=10.0,
-      gamma=0.9,
-      double_q=True,
-      num_bootstrap_heads=12,
-      prioritized=False,
-      prioritized_alpha=0.6,
-      prioritized_beta=0.4,
-      prioritized_epsilon=1e-6,
-      fingerprint_radius=3,
-      fingerprint_length=2048,
-      dense_layers=[1024, 512, 128, 32],
-      activation='relu',
-      optimizer='Adam',
-      batch_norm=False,
-      save_frequency=1000,
-      max_num_checkpoints=100,
-      discount_factor=0.7)
-  return hparams.override_from_dict(kwargs)
-'''
-
-
 def get_fingerprint(smiles, hparams):
     """Get Morgan Fingerprint of a specific SMILES string.
   Args:
@@ -800,30 +705,6 @@ def get_fingerprint(smiles, hparams):
     # np.asarray takes ~ 4.69 ms
     DataStructs.ConvertToNumpyArray(fingerprint, arr)
     return arr
-
-
-'''
-def get_fingerprint(smiles, hparams):
-  """Get Morgan Fingerprint of a specific SMILES string.
-  Args:
-    smiles: String. The SMILES string of the molecule.
-    hparams: tf.contrib.training.HParams. Hyper parameters.
-  Returns:
-    np.array. shape = [hparams.fingerprint_length]. The Morgan fingerprint.
-  """
-  if smiles is None:
-    return np.zeros((hparams.fingerprint_length,))
-  molecule = Chem.MolFromSmiles(smiles)
-  if molecule is None:
-    return np.zeros((hparams.fingerprint_length,))
-  fingerprint = AllChem.GetMorganFingerprintAsBitVect(
-      molecule, hparams.fingerprint_radius, hparams.fingerprint_length)
-  arr = np.zeros((1,))
-  # ConvertToNumpyArray takes ~ 0.19 ms, while
-  # np.asarray takes ~ 4.69 ms
-  DataStructs.ConvertToNumpyArray(fingerprint, arr)
-  return arr
-'''
 
 
 def get_fingerprint_with_steps_left(smiles, steps_left, hparams):  # same for new action space
