@@ -2,6 +2,12 @@
 
 To complement the thesis submitted for Part II project in Chemistry.
 
+## How to calculate the protrusion of an arbitrary ligand after being docked using AutoDock Vina?
+
+python calculate_protrusion.py --envelope "celecoxib_envelope_02_with_01_resolution.csv" --ligand "ligand_61_300_0002_MPro_docking_10step_out.pdbqt"
+
+This would also work with any other 3D structural format of the ligand after a small modification in the script to read the correct columnds in the file (e.g. a PDB file)
+
 ## How to Build your own Envelope?
 
 Execute (something similar to) the following snippet in a Terminal:
